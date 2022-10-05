@@ -6,6 +6,8 @@
 #define ADAFRUIT_THERMAL_H
 
 #include "Arduino.h"
+#include <queue>
+#include <utility>
 
 // Internal character sets used with ESC R n
 #define CHARSET_USA 0           //!< American character set
@@ -86,6 +88,9 @@ enum barcodes {
   CODE93,  /**< CODE93 barcode system. 1<=num<=255 */
   CODE128, /**< CODE128 barcode system. 2<=num<=255 */
 };
+
+// Read this as 'write the byte then delay <<time>> amount before anything else'
+using ByteAndDelay = std::pair<uint8_t, long>;
 
 /*!
  * Driver for the thermal printer
@@ -305,9 +310,10 @@ public:
      */
     timeoutSet(unsigned long),
     /*!
-     * @brief Waits for the prior task to complete 
+     * @brief If the timeout has passed, send anything in
+     * the queue. Else, do nothing and return.
      */
-    timeoutWait(),
+    tick(),
     /*!
      * @brief Disables underline
      */
@@ -358,6 +364,7 @@ private:
       writeBytes(uint8_t a, uint8_t b, uint8_t c, uint8_t d),
       setPrintMode(uint8_t mask), unsetPrintMode(uint8_t mask),
       writePrintMode(), adjustCharValues(uint8_t printMode);
+  std::queue<ByteAndDelay> _chars_to_write;
 };
 
 #endif // ADAFRUIT_THERMAL_H
